@@ -63,10 +63,16 @@ class MnistBayesianSingleLayer(object):
             accuracies.append(accuracy)
         return accuracies
 
+def leaky_relu(x, alpha=0.01):
+    return tf.maximum(x, alpha * x)
+
 def MLP(w1, b1, w2, b2, w3, b3, w4, b4, X):
-    h = tf.tanh(tf.matmul(X, w1) + b1)
-    h = tf.tanh(tf.matmul(h, w2) + b2)
-    h = tf.tanh(tf.matmul(h, w3) + b3)
+    h = leaky_relu(tf.matmul(X, w1) + b1)
+    h = leaky_relu(tf.matmul(h, w2) + b2)
+    h = leaky_relu(tf.matmul(h, w3) + b3)
+    # h = tf.matmul(h, w4) + b4
+    # h = tf.tanh(tf.matmul(h, w2) + b2)
+    # h = tf.tanh(tf.matmul(h, w3) + b3)
     h = tf.matmul(h, w4) + b4
     return h
 
@@ -161,7 +167,6 @@ class MnistBayesianMultiLayer(object):
         for _ in range(n_samples):
             prob = self.realize_network(X_test)
             probs.append(prob.eval())
-        print(probs)
         accuracies = []
         for prob in probs:
             pred = np.argmax(prob, axis=1)

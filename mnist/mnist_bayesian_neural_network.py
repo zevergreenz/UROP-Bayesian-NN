@@ -69,11 +69,11 @@ def leaky_relu(x, alpha=0.01):
 def MLP(w1, b1, w2, b2, w3, b3, w4, b4, X):
     h = leaky_relu(tf.matmul(X, w1) + b1)
     h = leaky_relu(tf.matmul(h, w2) + b2)
-    h = leaky_relu(tf.matmul(h, w3) + b3)
+    # h = leaky_relu(tf.matmul(h, w3) + b3)
     # h = tf.matmul(h, w4) + b4
     # h = tf.tanh(tf.matmul(h, w2) + b2)
     # h = tf.tanh(tf.matmul(h, w3) + b3)
-    h = tf.matmul(h, w4) + b4
+    h = tf.matmul(h, w3) + b3
     return h
 
 class MnistBayesianMultiLayer(object):
@@ -82,12 +82,12 @@ class MnistBayesianMultiLayer(object):
         self.output_dim = output_dim
         self.batch_size = batch_size
 
-        self.w1_shape = [784, 32]
-        self.w2_shape = [32, 10]
-        self.w3_shape = [10, 10]
+        self.w1_shape = [784, 800]
+        self.w2_shape = [800, 800]
+        self.w3_shape = [800, 10]
         self.w4_shape = [10, 10]
-        self.b1_shape = [32]
-        self.b2_shape = [10]
+        self.b1_shape = [800]
+        self.b2_shape = [800]
         self.b3_shape = [10]
         self.b4_shape = [10]
 
@@ -103,10 +103,10 @@ class MnistBayesianMultiLayer(object):
         self.b3 = Normal(loc=tf.zeros(self.b3_shape), scale=tf.ones(self.b3_shape))
         self.b4 = Normal(loc=tf.zeros(self.b4_shape), scale=tf.ones(self.b4_shape))
 
-        o1 = tf.nn.relu(tf.matmul(self.X_placeholder, self.w1) + self.b1)
-        o2 = tf.nn.relu(tf.matmul(o1, self.w2) + self.b2)
-        o3 = tf.nn.relu(tf.matmul(o2, self.w3) + self.b3)
-        o4 = tf.nn.relu(tf.matmul(o3, self.w4) + self.b4)
+        # o1 = tf.nn.relu(tf.matmul(self.X_placeholder, self.w1) + self.b1)
+        # o2 = tf.nn.relu(tf.matmul(o1, self.w2) + self.b2)
+        # o3 = tf.nn.relu(tf.matmul(o2, self.w3) + self.b3)
+        # o4 = tf.nn.relu(tf.matmul(o3, self.w4) + self.b4)
         self.categorical = Categorical(MLP(self.w1, self.b1, self.w2, self.b2, self.w3, self.b3, self.w4, self.b4, self.X_placeholder))
 
         self.qw1 = Normal(loc=tf.Variable(tf.random_normal(self.w1_shape), name='qw1_loc'),
@@ -130,13 +130,13 @@ class MnistBayesianMultiLayer(object):
                 self.w1: self.qw1, 
                 self.w2: self.qw2,
                 self.w3: self.qw3,
-                self.w4: self.qw4,
+                # self.w4: self.qw4,
                 self.b1: self.qb1,
                 self.b2: self.qb2,
-                self.b3: self.qb3,
-                self.b4: self.qb4
+                self.b3: self.qb3
+                # self.b4: self.qb4
             }, data={self.categorical: self.Y_placeholder})
-        self.inference.initialize(n_iter=50000, n_print=100, scale={self.categorical: mnist.train.num_examples / self.batch_size})
+        self.inference.initialize(n_iter=10000, n_print=100, scale={self.categorical: mnist.train.num_examples / self.batch_size})
 
     def optimize(self, mnist):
         for _ in range(self.inference.n_iter):

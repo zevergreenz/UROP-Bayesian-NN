@@ -77,7 +77,7 @@ def MLP(w1, b1, w2, b2, w3, b3, w4, b4, X):
     return h
 
 class MnistBayesianMultiLayer(object):
-    def __init__(self, mnist, input_dim=784, output_dim=10, batch_size=100):
+    def __init__(self, input_dim=784, output_dim=10, batch_size=100):
         self.input_dim = input_dim
         self.output_dim = output_dim
         self.batch_size = batch_size
@@ -130,21 +130,29 @@ class MnistBayesianMultiLayer(object):
                 self.w1: self.qw1, 
                 self.w2: self.qw2,
                 self.w3: self.qw3,
-                # self.w4: self.qw4,
+                self.w4: self.qw4,
                 self.b1: self.qb1,
                 self.b2: self.qb2,
-                self.b3: self.qb3
-                # self.b4: self.qb4
+                self.b3: self.qb3,
+                self.b4: self.qb4
             }, data={self.categorical: self.Y_placeholder})
-        self.inference.initialize(n_iter=10000, n_print=100, scale={self.categorical: mnist.train.num_examples / self.batch_size})
+        self.inference.initialize(n_iter=1, n_print=100, scale={self.categorical: 55000 / self.batch_size})
 
-    def optimize(self, mnist):
+    # def optimize(self, mnist):
+    #     for _ in range(self.inference.n_iter):
+    #         X_batch, Y_batch = mnist.train.next_batch(self.batch_size)
+    #         Y_batch = np.argmax(Y_batch, axis=1)
+    #         info_dict = self.inference.update(feed_dict={
+    #                 self.X_placeholder: X_batch,
+    #                 self.Y_placeholder: Y_batch
+    #             })
+    #         self.inference.print_progress(info_dict)
+
+    def optimize(self, X, Y):
         for _ in range(self.inference.n_iter):
-            X_batch, Y_batch = mnist.train.next_batch(self.batch_size)
-            Y_batch = np.argmax(Y_batch, axis=1)
             info_dict = self.inference.update(feed_dict={
-                    self.X_placeholder: X_batch,
-                    self.Y_placeholder: Y_batch
+                    self.X_placeholder: X,
+                    self.Y_placeholder: Y
                 })
             self.inference.print_progress(info_dict)
 
@@ -159,10 +167,25 @@ class MnistBayesianMultiLayer(object):
         sb4 = self.qb4.sample()
         return tf.nn.softmax(MLP(sw1, sb1, sw2, sb2, sw3, sb3, sw4, sb4, X))
 
-    def validate(self, mnist, n_samples):
-        X_test = mnist.test.images
-        Y_test = mnist.test.labels
-        Y_test = np.argmax(Y_test, axis=1)
+    def predict(self, X):
+        return np.argmax(self.realize_network(X).eval(), axis=1)
+
+    # def validate(self, mnist, n_samples):
+    #     X_test = mnist.test.images
+    #     Y_test = mnist.test.labels
+    #     Y_test = np.argmax(Y_test, axis=1)
+    #     probs = []
+    #     for _ in range(n_samples):
+    #         prob = self.realize_network(X_test)
+    #         probs.append(prob.eval())
+    #     accuracies = []
+    #     for prob in probs:
+    #         pred = np.argmax(prob, axis=1)
+    #         accuracy = (pred == Y_test).mean() * 100
+    #         accuracies.append(accuracy)
+    #     return accuracies
+
+    def validate(self, X_test, Y_test, n_samples=30):
         probs = []
         for _ in range(n_samples):
             prob = self.realize_network(X_test)
@@ -263,10 +286,13 @@ def main(_):
     #     print(acc)
 
     print("Bayesian Multi Layer Perceptron accuracy:")
-    model = MnistBayesianMultiLayer(mnist)
+    model = MnistBayesianMultiLayer()
     with tf.Session() as sess:
         sess.run(tf.global_variables_initializer())
-        model.optimize(mnist)
+        # model.optimize(mnist)
+        x_train = mnist.train.images
+        y_train = np.argmax(mnist.train.labels, axis=1)
+        model.optimize(x_train, y_train)
         acc = model.validate(mnist, 30)
         print(acc)
 

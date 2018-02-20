@@ -73,7 +73,7 @@ def main(_):
         y_test = mnist.test.labels
         model.optimize(x_train, y_train)
         acc = model.validate(x_test, y_test)
-        print(acc)
+        print(np.array(acc).mean())
 
 if __name__ == '__main__':
     tf.app.run()

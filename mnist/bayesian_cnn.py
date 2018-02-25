@@ -24,10 +24,10 @@ class BayesianCNN(object):
         model.add(Dropout(0.5))
         model.add(Dense(num_classes, activation='softmax'))
 
-        model.compile(loss=keras.losses.kullback_leibler_divergence, 
-                      optimizer=keras.optimizers.Adadelta(), 
-                      metrics=['accuracy'])
-
+        # model.compile(loss=keras.losses.kullback_leibler_divergence, 
+        #               optimizer=keras.optimizers.Adadelta(), 
+        #               metrics=['accuracy'])
+        model.compile(loss='categorical_crossentropy', optimizer='adam')
         self.model = model
 
     def optimize(self, x, y, epochs=12, batch_size=32):

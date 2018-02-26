@@ -5,7 +5,7 @@ import keras
 from tensorflow.examples.tutorials.mnist import input_data
 from keras import backend as K
 from keras.models import Sequential, load_model
-from keras.layers import Dense, Flatten, Conv2D, MaxPooling2D
+from keras.layers import Dense, Flatten, Conv2D, MaxPooling2D, Activation
 from layers.inference_dropout import InferenceDropout as Dropout
 
 class BayesianCNN(object):
@@ -13,11 +13,11 @@ class BayesianCNN(object):
     def __init__(self, input_shape=(28, 28, 1), num_classes=10):
         model = Sequential()
 
-        model.add(Conv2D(20, kernel_size=(5, 5), input_shape=input_shape))
-        model.add(MaxPooling2D(pool_size=(2, 2)))
+        model.add(Conv2D(20, kernel_size=(5, 5), border_mode='same', activation='relu', input_shape=input_shape))
+        model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
 
-        model.add(Conv2D(50, (5, 5)))
-        model.add(MaxPooling2D(pool_size=(2, 2)))
+        model.add(Conv2D(50, (5, 5), border_mode='same', activation='relu'))
+        model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
 
         model.add(Flatten())
         model.add(Dense(500, activation='relu'))

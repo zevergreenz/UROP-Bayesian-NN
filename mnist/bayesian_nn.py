@@ -51,13 +51,21 @@ class MnistBayesianSingleLayer(object):
         o2 = tf.matmul(o1, w2) + b2
         return o2
 
-    def optimize(self, mnist):
+    # def optimize(self, mnist):
+    #     for _ in range(self.inference.n_iter):
+    #         X_batch, Y_batch = mnist.train.next_batch(self.batch_size)
+    #         Y_batch = np.argmax(Y_batch, axis=1)
+    #         info_dict = self.inference.update(feed_dict={
+    #                 self.X_placeholder: X_batch,
+    #                 self.Y_placeholder: Y_batch
+    #             })
+    #         self.inference.print_progress(info_dict)
+
+    def optimize(self, X, Y):
         for _ in range(self.inference.n_iter):
-            X_batch, Y_batch = mnist.train.next_batch(self.batch_size)
-            Y_batch = np.argmax(Y_batch, axis=1)
             info_dict = self.inference.update(feed_dict={
-                    self.X_placeholder: X_batch,
-                    self.Y_placeholder: Y_batch
+                    self.X_placeholder: X,
+                    self.Y_placeholder: Y
                 })
             self.inference.print_progress(info_dict)
 

@@ -2,8 +2,10 @@ import numpy as np
 import tensorflow as tf
 
 from tensorflow.examples.tutorials.mnist import input_data
-from mnist_bayesian_neural_network import MnistBayesianMultiLayer
+from bayesian_nn import MnistBayesianMultiLayer, MnistBayesianSingleLayer
 from bayesian_cnn import BayesianCNN
+
+all_accuracy = np.array([])
 
 def random_sample_active_learning(model, train_x, train_y, unlabelled_x, unlabelled_y, x_test, y_test, iters=50, k=100):
     for i in range(iters):
@@ -34,9 +36,46 @@ def maximum_entropy_active_learning(model, train_x, train_y, unlabelled_x, unlab
         print("Total data used so far: %d" % train_x.shape[0])
         pred = np.zeros(unlabelled_y.shape)
 
-        for _ in range(10):
+        for _ in range(50):
             pred += model.predict(unlabelled_x)
-        pred /= 10
+        pred /= 50
+
+        entropy = np.sum(-1 * pred * np.log(pred + 1e-9), axis=1)
+        # entropy = np.sum(-1 * pred * np.log(pred + 1e-9), axis=1)
+        idx = np.argpartition(entropy, -k)[-k:]
+
+        # Add the selected data points to train set.
+        train_x = np.append(train_x, np.take(unlabelled_x, idx, axis=0), axis=0)
+        train_y = np.append(train_y, np.take(unlabelled_y, idx, axis=0), axis=0)
+
+        # Train the model again.
+        model.optimize(train_x, train_y)
+
+        # Delete the selected data points from the unlabelled set.
+        unlabelled_x = np.delete(unlabelled_x, idx, 0)
+        unlabelled_y = np.delete(unlabelled_y, idx, 0)
+
+        # Test the accuracy of the model.
+        acc = model.validate(x_test, y_test)
+        # all_accuracy = np.append(all_accuracy, acc)
+        print(np.array(acc).mean())
+
+
+def partial_maximum_entropy_active_learning(model, train_x, train_y, unlabelled_x, unlabelled_y, x_test, y_test, iters=50, k=100):
+    for i in range(iters):
+        print("Active learning iteration %d" % i)
+        print("Total data used so far: %d" % train_x.shape[0])
+        pred = np.zeros(unlabelled_y.shape)
+
+        inp = model.input
+        outputs = [layer.output for layer in model.layers]
+        functors = [K.function([inp] + [K.learning_phase()], [out]) for out in outputs]
+
+
+
+        for _ in range(50):
+            pred += model.predict(unlabelled_x)
+        pred /= 50
 
         entropy = np.sum(-1 * pred * np.log(pred + 1e-9), axis=1)
         # entropy = np.sum(-1 * pred * np.log(pred + 1e-9), axis=1)
@@ -67,15 +106,17 @@ def maximum_entropy_active_learning(model, train_x, train_y, unlabelled_x, unlab
 
 def load_data():
     mnist = input_data.read_data_sets('MNIST_data/', one_hot=True)
-    x_train = np.reshape(mnist.train.images, (-1, 28, 28, 1))
+    # x_train = np.reshape(mnist.train.images, (-1, 28, 28, 1))
+    x_train = mnist.train.images
     y_train = mnist.train.labels
-    x_test  = np.reshape(mnist.test.images, (-1, 28, 28, 1))
+    # x_test  = np.reshape(mnist.test.images, (-1, 28, 28, 1))
+    x_test  = mnist.test.images
     y_test  = mnist.test.labels
     return (x_train, y_train, x_test, y_test)
 
 if __name__ == "__main__":
     # model = MnistBayesianMultiLayer()
-    model = BayesianCNN()
+    model = MnistBayesianSingleLayer()
     with tf.Session() as sess:
         sess.run(tf.global_variables_initializer())
         x_train, y_train, x_test, y_test = load_data()

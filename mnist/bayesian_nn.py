@@ -7,31 +7,49 @@ import matplotlib.pyplot as plt
 from tensorflow.examples.tutorials.mnist import input_data
 from edward.models import Categorical, Normal
 
+def leaky_relu(x, alpha=0.01):
+    return tf.maximum(x, alpha * x)
+
 class MnistBayesianSingleLayer(object):
-    def __init__(self, mnist, input_dim=784, output_dim=10, batch_size=100):
+    def __init__(self, input_dim=784, output_dim=10, batch_size=100):
         self.input_dim = input_dim
         self.output_dim = output_dim
         self.batch_size = batch_size
 
-        self.w_shape = [784, 10]
-        self.b_shape = [10]
-        self.w = Normal(loc=tf.zeros(self.w_shape), scale=tf.ones(self.w_shape))
-        self.b = Normal(loc=tf.zeros(self.b_shape), scale=tf.ones(self.b_shape))
+        self.w1_shape = [784, 15]
+        self.w2_shape = [15, 10]
+        self.b1_shape = [15]
+        self.b2_shape = [10]
+        self.w1 = Normal(loc=tf.zeros(self.w1_shape), scale=tf.ones(self.w1_shape))
+        self.w2 = Normal(loc=tf.zeros(self.w2_shape), scale=tf.ones(self.w2_shape))
+        self.b1 = Normal(loc=tf.zeros(self.b1_shape), scale=tf.ones(self.b1_shape))
+        self.b2 = Normal(loc=tf.zeros(self.b2_shape), scale=tf.ones(self.b2_shape))
 
-        self.X_placeholder = tf.placeholder(tf.float32, (None, self.w_shape[0]))
+        self.X_placeholder = tf.placeholder(tf.float32, (None, self.w1_shape[0]))
         self.Y_placeholder = tf.placeholder(tf.int32, (None,))
-        self.categorical = Categorical(tf.matmul(self.X_placeholder, self.w) + self.b)
+        self.categorical = Categorical(self.compute(self.X_placeholder, self.w1, self.b1, self.w2, self.b2))
 
-        self.qw = Normal(loc=tf.Variable(tf.random_normal(self.w_shape)),
-                         scale=tf.nn.softplus(tf.Variable(tf.random_normal(self.w_shape))))
-        self.qb = Normal(loc=tf.Variable(tf.random_normal(self.b_shape)),
-                         scale=tf.nn.softplus(tf.Variable(tf.random_normal(self.b_shape))))
+        self.qw1 = Normal(loc=tf.Variable(tf.random_normal(self.w1_shape)),
+                         scale=tf.nn.softplus(tf.Variable(tf.random_normal(self.w1_shape))))        
+        self.qw2 = Normal(loc=tf.Variable(tf.random_normal(self.w2_shape)),
+                         scale=tf.nn.softplus(tf.Variable(tf.random_normal(self.w2_shape))))
+        self.qb1 = Normal(loc=tf.Variable(tf.random_normal(self.b1_shape)),
+                         scale=tf.nn.softplus(tf.Variable(tf.random_normal(self.b1_shape))))        
+        self.qb2 = Normal(loc=tf.Variable(tf.random_normal(self.b2_shape)),
+                         scale=tf.nn.softplus(tf.Variable(tf.random_normal(self.b2_shape))))
 
         self.inference = ed.KLqp({
-                self.w: self.qw,
-                self.b: self.qb
+                self.w1: self.qw1,
+                self.w2: self.qw2,
+                self.b1: self.qb1,
+                self.b2: self.qb2
             }, data={self.categorical: self.Y_placeholder})
-        self.inference.initialize(n_iter=5000, n_print=100, scale={self.categorical: mnist.train.num_examples / self.batch_size})
+        self.inference.initialize(n_iter=100, n_print=100, scale={self.categorical: 50000 / self.batch_size})
+
+    def compute(self, X, w1, b1, w2, b2):
+        o1 = leaky_relu(tf.matmul(X, w1) + b1)
+        o2 = tf.matmul(o1, w2) + b2
+        return o2
 
     def optimize(self, mnist):
         for _ in range(self.inference.n_iter):
@@ -44,9 +62,14 @@ class MnistBayesianSingleLayer(object):
             self.inference.print_progress(info_dict)
 
     def realize_network(self, X):
-        w = self.qw.sample()
-        b = self.qb.sample()
-        return tf.nn.softmax(tf.matmul(X, w) + b)
+        w1 = self.qw1.sample()
+        w2 = self.qw2.sample()
+        b1 = self.qb1.sample()
+        b2 = self.qb2.sample()
+        return tf.nn.softmax(self.compute(X, w1, b1, w2, b2))
+
+    def predict(self, X):
+        return self.realize_network(X).eval()
 
     def validate(self, mnist, n_samples):
         X_test = mnist.test.images
@@ -62,9 +85,6 @@ class MnistBayesianSingleLayer(object):
             accuracy = (pred == Y_test).mean() * 100
             accuracies.append(accuracy)
         return accuracies
-
-def leaky_relu(x, alpha=0.01):
-    return tf.maximum(x, alpha * x)
 
 def MLP(w1, b1, w2, b2, w3, b3, w4, b4, X):
     h = leaky_relu(tf.matmul(X, w1) + b1)

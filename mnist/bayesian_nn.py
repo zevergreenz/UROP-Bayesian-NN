@@ -80,9 +80,22 @@ class MnistBayesianSingleLayer(object):
     def predict(self, X):
         return self.realize_network(X).eval()
 
-    def validate(self, mnist, n_samples):
-        X_test = mnist.test.images
-        Y_test = mnist.test.labels
+    # def validate(self, mnist, n_samples):
+    #     X_test = mnist.test.images
+    #     Y_test = mnist.test.labels
+    #     Y_test = np.argmax(Y_test, axis=1)
+    #     probs = []
+    #     for _ in range(n_samples):
+    #         prob = self.realize_network(X_test)
+    #         probs.append(prob.eval())
+    #     accuracies = []
+    #     for prob in probs:
+    #         pred = np.argmax(prob, axis=1)
+    #         accuracy = (pred == Y_test).mean() * 100
+    #         accuracies.append(accuracy)
+    #     return accuracies
+
+    def validate(self, X_test, Y_test, n_samples=30):
         Y_test = np.argmax(Y_test, axis=1)
         probs = []
         for _ in range(n_samples):

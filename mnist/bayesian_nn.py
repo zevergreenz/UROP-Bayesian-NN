@@ -44,7 +44,7 @@ class MnistBayesianSingleLayer(object):
                 self.b1: self.qb1,
                 self.b2: self.qb2
             }, data={self.categorical: self.Y_placeholder})
-        self.inference.initialize(n_iter=1000, n_print=100, scale={self.categorical: 50000 / 100})
+        self.inference.initialize(n_iter=10000, n_print=100, scale={self.categorical: 50000 / 100})
 
     def compute(self, X, w1, b1, w2, b2):
         o1 = leaky_relu(tf.matmul(X, w1) + b1)

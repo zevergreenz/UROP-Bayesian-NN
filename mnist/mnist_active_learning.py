@@ -57,8 +57,11 @@ def maximum_entropy_active_learning(model, train_x, train_y, unlabelled_x, unlab
 
         # Test the accuracy of the model.
         acc = model.validate(x_test, y_test)
-        # all_accuracy = np.append(all_accuracy, acc)
-        print(np.array(acc).mean())
+        acc_mean = np.array(acc).mean()
+        print(acc_mean)
+        all_accuracy = np.append(all_accuracy, acc_mean)
+
+    np.save('./nn_max_entropy.npy', all_accuracy)
 
 
 def first_layer_maximum_entropy_active_learning(model, train_x, train_y, unlabelled_x, unlabelled_y, x_test, y_test, iters=50, k=100):
@@ -122,5 +125,5 @@ if __name__ == "__main__":
         train_y = y_train[:100]
         unlabelled_x = x_train[100:]
         unlabelled_y = y_train[100:]
-        # maximum_entropy_active_learning(model, train_x, train_y, unlabelled_x, unlabelled_y, x_test, y_test)
-        first_layer_maximum_entropy_active_learning(model, train_x, train_y, unlabelled_x, unlabelled_y, x_test, y_test)
+        maximum_entropy_active_learning(model, train_x, train_y, unlabelled_x, unlabelled_y, x_test, y_test)
+        # first_layer_maximum_entropy_active_learning(model, train_x, train_y, unlabelled_x, unlabelled_y, x_test, y_test)

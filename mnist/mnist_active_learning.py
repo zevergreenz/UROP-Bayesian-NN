@@ -159,7 +159,7 @@ if __name__ == "__main__":
         unlabelled_y = y_train[100:]
         train_x = x_train[:200]
         train_y = y_train[:200]
-        model.optimize(x_train, y_train)
+        model.optimize(train_x, train_y)
         random_sample_active_learning(model, train_x, train_y, unlabelled_x, unlabelled_y, x_test, y_test)
         # maximum_entropy_active_learning(model, train_x, train_y, unlabelled_x, unlabelled_y, x_test, y_test)
         # maximum_meanvar_active_learning(model, train_x, train_y, unlabelled_x, unlabelled_y, x_test, y_test)

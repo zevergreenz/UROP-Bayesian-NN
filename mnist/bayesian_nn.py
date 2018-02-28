@@ -62,6 +62,7 @@ class MnistBayesianSingleLayer(object):
     #         self.inference.print_progress(info_dict)
 
     def optimize(self, X, Y):
+        self.inference.initialize(n_iter=1000, n_print=100, scale={self.categorical: 50000 / 100})
         Y = np.argmax(Y, axis=1)
         for _ in range(self.inference.n_iter // 10):
             info_dict = self.inference.update(feed_dict={

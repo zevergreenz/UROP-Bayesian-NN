@@ -75,7 +75,7 @@ def maximum_meanvar_active_learning(model, train_x, train_y, unlabelled_x, unlab
         for _ in range(50):
             pred += [model.predict(unlabelled_x)]
 
-        meanvar = np.var(pred, axis=0)
+        meanvar = np.sum(np.var(pred, axis=0), axis=1)
         # entropy = np.sum(-1 * pred * np.log(pred + 1e-9), axis=1)
         idx = np.argpartition(meanvar, -k)[-k:]
 

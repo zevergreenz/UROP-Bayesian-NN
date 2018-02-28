@@ -5,7 +5,7 @@ from tensorflow.examples.tutorials.mnist import input_data
 from bayesian_nn import MnistBayesianMultiLayer, MnistBayesianSingleLayer
 from bayesian_cnn import BayesianCNN
 
-def random_sample_active_learning(model, train_x, train_y, unlabelled_x, unlabelled_y, x_test, y_test, iters=50, k=100):
+def random_sample_active_learning(model, train_x, train_y, unlabelled_x, unlabelled_y, x_test, y_test, iters=20, k=50):
     all_accuracy = np.array([])
     for i in range(iters):
         print("Active learning iteration %d" % i)
@@ -160,6 +160,7 @@ if __name__ == "__main__":
         train_x = x_train[:200]
         train_y = y_train[:200]
         model.optimize(x_train, y_train)
-        maximum_entropy_active_learning(model, train_x, train_y, unlabelled_x, unlabelled_y, x_test, y_test)
+        random_sample_active_learning(model, train_x, train_y, unlabelled_x, unlabelled_y, x_test, y_test)
+        # maximum_entropy_active_learning(model, train_x, train_y, unlabelled_x, unlabelled_y, x_test, y_test)
         # maximum_meanvar_active_learning(model, train_x, train_y, unlabelled_x, unlabelled_y, x_test, y_test)
         # first_layer_maximum_entropy_active_learning(model, train_x, train_y, unlabelled_x, unlabelled_y, x_test, y_test)

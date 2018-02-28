@@ -16,9 +16,9 @@ class MnistBayesianSingleLayer(object):
         self.output_dim = output_dim
         self.batch_size = batch_size
 
-        self.w1_shape = [784, 15]
-        self.w2_shape = [15, 10]
-        self.b1_shape = [15]
+        self.w1_shape = [784, 300]
+        self.w2_shape = [300, 10]
+        self.b1_shape = [300]
         self.b2_shape = [10]
         self.w1 = Normal(loc=tf.zeros(self.w1_shape), scale=tf.ones(self.w1_shape))
         self.w2 = Normal(loc=tf.zeros(self.w2_shape), scale=tf.ones(self.w2_shape))

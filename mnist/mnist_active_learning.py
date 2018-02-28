@@ -141,12 +141,12 @@ def first_layer_maximum_entropy_active_learning(model, train_x, train_y, unlabel
 
 def load_data():
     mnist = input_data.read_data_sets('MNIST_data/', one_hot=True)
-    # x_train = np.reshape(mnist.train.images, (-1, 28, 28, 1))
     x_train = mnist.train.images
     y_train = mnist.train.labels
-    # x_test  = np.reshape(mnist.test.images, (-1, 28, 28, 1))
     x_test  = mnist.test.images
     y_test  = mnist.test.labels
+    x_train = np.reshape(x_train, (-1, 28, 28, 1))
+    x_test  = np.reshape(x_test, (-1, 28, 28, 1))
     return (x_train, y_train, x_test, y_test)
 
 if __name__ == "__main__":

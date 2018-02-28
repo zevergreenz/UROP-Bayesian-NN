@@ -151,7 +151,7 @@ def load_data():
 
 if __name__ == "__main__":
     # model = MnistBayesianMultiLayer()
-    model = MnistBayesianSingleLayer()
+    model = BayesianCNN()
     with tf.Session() as sess:
         sess.run(tf.global_variables_initializer())
         x_train, y_train, x_test, y_test = load_data()

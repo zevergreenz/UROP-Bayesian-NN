@@ -44,7 +44,6 @@ class MnistBayesianSingleLayer(object):
                 self.b1: self.qb1,
                 self.b2: self.qb2
             }, data={self.categorical: self.Y_placeholder})
-        self.inference.initialize(n_iter=100, n_print=100, scale={self.categorical: 50000 / self.batch_size})
 
     def compute(self, X, w1, b1, w2, b2):
         o1 = leaky_relu(tf.matmul(X, w1) + b1)
@@ -63,6 +62,7 @@ class MnistBayesianSingleLayer(object):
 
     def optimize(self, X, Y):
         Y = np.argmax(Y, axis=1)
+        self.inference.initialize(n_iter=100, n_print=100, scale={self.categorical: 50000 / 100})
         for _ in range(self.inference.n_iter):
             info_dict = self.inference.update(feed_dict={
                     self.X_placeholder: X,

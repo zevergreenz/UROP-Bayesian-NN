@@ -145,8 +145,8 @@ def load_data():
     y_train = mnist.train.labels
     x_test  = mnist.test.images
     y_test  = mnist.test.labels
-    x_train = np.reshape(x_train, (-1, 28, 28, 1))
-    x_test  = np.reshape(x_test, (-1, 28, 28, 1))
+    # x_train = np.reshape(x_train, (-1, 28, 28, 1))
+    # x_test  = np.reshape(x_test, (-1, 28, 28, 1))
     return (x_train, y_train, x_test, y_test)
 
 if __name__ == "__main__":

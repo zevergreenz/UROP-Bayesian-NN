@@ -161,6 +161,6 @@ if __name__ == "__main__":
         train_y = y_train[:200]
         model.optimize(train_x, train_y)
         # random_sample_active_learning(model, train_x, train_y, unlabelled_x, unlabelled_y, x_test, y_test)
-        maximum_entropy_active_learning(model, train_x, train_y, unlabelled_x, unlabelled_y, x_test, y_test)
-        # maximum_meanvar_active_learning(model, train_x, train_y, unlabelled_x, unlabelled_y, x_test, y_test)
+        # maximum_entropy_active_learning(model, train_x, train_y, unlabelled_x, unlabelled_y, x_test, y_test)
+        maximum_meanvar_active_learning(model, train_x, train_y, unlabelled_x, unlabelled_y, x_test, y_test)
         # first_layer_maximum_entropy_active_learning(model, train_x, train_y, unlabelled_x, unlabelled_y, x_test, y_test)

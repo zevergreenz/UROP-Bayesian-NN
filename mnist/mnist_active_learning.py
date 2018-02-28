@@ -61,20 +61,17 @@ def maximum_entropy_active_learning(model, train_x, train_y, unlabelled_x, unlab
         print(np.array(acc).mean())
 
 
-def partial_maximum_entropy_active_learning(model, train_x, train_y, unlabelled_x, unlabelled_y, x_test, y_test, iters=50, k=100):
+def first_layer_maximum_entropy_active_learning(model, train_x, train_y, unlabelled_x, unlabelled_y, x_test, y_test, iters=50, k=100):
     for i in range(iters):
         print("Active learning iteration %d" % i)
         print("Total data used so far: %d" % train_x.shape[0])
-        pred = np.zeros(unlabelled_y.shape)
 
-        inp = model.input
-        outputs = [layer.output for layer in model.layers]
-        functors = [K.function([inp] + [K.learning_phase()], [out]) for out in outputs]
-
-
+        first_layer_out = model.predict_layers(unlabelled_x)[0]
+        pred = np.zeros(first_layer_out.shape)
+        print(first_layer_out)
 
         for _ in range(50):
-            pred += model.predict(unlabelled_x)
+            pred += model.predict_layers(unlabelled_x)[0]
         pred /= 50
 
         entropy = np.sum(-1 * pred * np.log(pred + 1e-9), axis=1)
@@ -126,4 +123,4 @@ if __name__ == "__main__":
         unlabelled_x = x_train[100:]
         unlabelled_y = y_train[100:]
         # maximum_entropy_active_learning(model, train_x, train_y, unlabelled_x, unlabelled_y, x_test, y_test)
-        maximum_entropy_active_learning(model, train_x, train_y, unlabelled_x, unlabelled_y, x_test, y_test)
+        first_layer_maximum_entropy_active_learning(model, train_x, train_y, unlabelled_x, unlabelled_y, x_test, y_test)

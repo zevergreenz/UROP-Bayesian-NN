@@ -77,8 +77,21 @@ class MnistBayesianSingleLayer(object):
         b2 = self.qb2.sample()
         return tf.nn.softmax(self.compute(X, w1, b1, w2, b2))
 
+    def realize_network_layers(self, X):
+        w1 = self.qw1.sample()
+        w2 = self.qw2.sample()
+        b1 = self.qb1.sample()
+        b2 = self.qb2.sample()
+        return [tf.matmul(X, w1) + b1,
+                tf.nn.softmax(self.compute(X, w1, b1, w2, b2))]
+
     def predict(self, X):
         return self.realize_network(X).eval()
+
+    def predict_layers(self, X):
+        result = self.realize_network_layers(X)
+        result = [r.eval() for r in result]
+        return result
 
     # def validate(self, mnist, n_samples):
     #     X_test = mnist.test.images

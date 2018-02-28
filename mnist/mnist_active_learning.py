@@ -6,6 +6,7 @@ from bayesian_nn import MnistBayesianMultiLayer, MnistBayesianSingleLayer
 from bayesian_cnn import BayesianCNN
 
 def random_sample_active_learning(model, train_x, train_y, unlabelled_x, unlabelled_y, x_test, y_test, iters=50, k=100):
+    all_accuracy = np.array([])
     for i in range(iters):
         print("Active learning iteration %d" % i)
         print("Total data used so far: %d" % train_x.shape[0])
@@ -27,6 +28,8 @@ def random_sample_active_learning(model, train_x, train_y, unlabelled_x, unlabel
         # Test the accuracy of the model.
         acc = model.validate(x_test, y_test)
         print(np.array(acc).mean())
+
+    np.save('./nn_random.npy', all_accuracy)
 
 def maximum_entropy_active_learning(model, train_x, train_y, unlabelled_x, unlabelled_y, x_test, y_test, iters=50, k=100):
     all_accuracy = np.array([])
@@ -61,6 +64,39 @@ def maximum_entropy_active_learning(model, train_x, train_y, unlabelled_x, unlab
         all_accuracy = np.append(all_accuracy, acc_mean)
 
     np.save('./nn_max_entropy.npy', all_accuracy)
+
+def maximum_meanvar_active_learning(model, train_x, train_y, unlabelled_x, unlabelled_y, x_test, y_test, iters=10, k=100):
+    all_accuracy = np.array([])
+    for i in range(iters):
+        print("Active learning iteration %d" % i)
+        print("Total data used so far: %d" % train_x.shape[0])
+        pred = []
+
+        for _ in range(50):
+            pred += [model.predict(unlabelled_x)]
+
+        meanvar = np.var(pred, axis=0)
+        # entropy = np.sum(-1 * pred * np.log(pred + 1e-9), axis=1)
+        idx = np.argpartition(meanvar, -k)[-k:]
+
+        # Add the selected data points to train set.
+        train_x = np.append(train_x, np.take(unlabelled_x, idx, axis=0), axis=0)
+        train_y = np.append(train_y, np.take(unlabelled_y, idx, axis=0), axis=0)
+
+        # Train the model again.
+        model.optimize(train_x, train_y)
+
+        # Delete the selected data points from the unlabelled set.
+        unlabelled_x = np.delete(unlabelled_x, idx, 0)
+        unlabelled_y = np.delete(unlabelled_y, idx, 0)
+
+        # Test the accuracy of the model.
+        acc = model.validate(x_test, y_test)
+        acc_mean = np.array(acc).mean()
+        print(acc_mean)
+        all_accuracy = np.append(all_accuracy, acc_mean)
+
+    np.save('./nn_max_meanvar.npy', all_accuracy)
 
 
 def first_layer_maximum_entropy_active_learning(model, train_x, train_y, unlabelled_x, unlabelled_y, x_test, y_test, iters=50, k=100):

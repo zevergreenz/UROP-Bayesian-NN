@@ -29,7 +29,7 @@ def random_sample_active_learning(model, train_x, train_y, unlabelled_x, unlabel
         acc = model.validate(x_test, y_test)
         print(np.array(acc).mean())
 
-    np.save('./cnn_random.npy', all_accuracy)
+    np.save('./nn_random.npy', all_accuracy)
 
 def maximum_entropy_active_learning(model, train_x, train_y, unlabelled_x, unlabelled_y, x_test, y_test, iters=10, k=100):
     all_accuracy = np.array([])
@@ -62,7 +62,7 @@ def maximum_entropy_active_learning(model, train_x, train_y, unlabelled_x, unlab
         acc_mean = np.array(acc).mean()
         print(acc_mean)
         all_accuracy = np.append(all_accuracy, acc_mean)
-        np.save('./cnn_max_entropy.npy', all_accuracy)
+        np.save('./nn_max_entropy.npy', all_accuracy)
 
 
 def maximum_meanvar_active_learning(model, train_x, train_y, unlabelled_x, unlabelled_y, x_test, y_test, iters=10, k=100):
@@ -96,7 +96,7 @@ def maximum_meanvar_active_learning(model, train_x, train_y, unlabelled_x, unlab
         print(acc_mean)
         all_accuracy = np.append(all_accuracy, acc_mean)
 
-    np.save('./cnn_max_meanvar.npy', all_accuracy)
+    np.save('./nn_max_meanvar.npy', all_accuracy)
 
 
 def first_layer_maximum_entropy_active_learning(model, train_x, train_y, unlabelled_x, unlabelled_y, x_test, y_test, iters=50, k=100):
@@ -145,13 +145,13 @@ def load_data():
     y_train = mnist.train.labels
     x_test  = mnist.test.images
     y_test  = mnist.test.labels
-    x_train = np.reshape(x_train, (-1, 28, 28, 1))
-    x_test  = np.reshape(x_test, (-1, 28, 28, 1))
+    # x_train = np.reshape(x_train, (-1, 28, 28, 1))
+    # x_test  = np.reshape(x_test, (-1, 28, 28, 1))
     return (x_train, y_train, x_test, y_test)
 
 if __name__ == "__main__":
-    # model = MnistBayesianMultiLayer()
-    model = BayesianCNN()
+    model = MnistBayesianSingleLayer()
+    # model = BayesianCNN()
     with tf.Session() as sess:
         sess.run(tf.global_variables_initializer())
         x_train, y_train, x_test, y_test = load_data()

@@ -5,7 +5,7 @@ from tensorflow.examples.tutorials.mnist import input_data
 from bayesian_nn import MnistBayesianMultiLayer, MnistBayesianSingleLayer
 from bayesian_cnn import BayesianCNN
 
-def random_sample_active_learning(model, train_x, train_y, unlabelled_x, unlabelled_y, x_test, y_test, iters=20, k=50):
+def random_sample_active_learning(model, train_x, train_y, unlabelled_x, unlabelled_y, x_test, y_test, iters=10, k=100):
     all_accuracy = np.array([])
     for i in range(iters):
         print("Active learning iteration %d" % i)
@@ -150,8 +150,9 @@ def load_data():
     return (x_train, y_train, x_test, y_test)
 
 if __name__ == "__main__":
-    model = MnistBayesianSingleLayer()
     # model = BayesianCNN()
+    model = MnistBayesianSingleLayer()
+    print("Run active learning random.")
     with tf.Session() as sess:
         sess.run(tf.global_variables_initializer())
         x_train, y_train, x_test, y_test = load_data()
@@ -161,6 +162,29 @@ if __name__ == "__main__":
         train_y = y_train[:200]
         model.optimize(train_x, train_y)
         random_sample_active_learning(model, train_x, train_y, unlabelled_x, unlabelled_y, x_test, y_test)
-        # maximum_entropy_active_learning(model, train_x, train_y, unlabelled_x, unlabelled_y, x_test, y_test)
-        # maximum_meanvar_active_learning(model, train_x, train_y, unlabelled_x, unlabelled_y, x_test, y_test)
+
+    model = MnistBayesianSingleLayer()
+    print("Run active learning maximum entropy.")
+    with tf.Session() as sess:
+        sess.run(tf.global_variables_initializer())
+        x_train, y_train, x_test, y_test = load_data()
+        unlabelled_x = x_train[100:]
+        unlabelled_y = y_train[100:]
+        train_x = x_train[:200]
+        train_y = y_train[:200]
+        model.optimize(train_x, train_y)
+        maximum_entropy_active_learning(model, train_x, train_y, unlabelled_x, unlabelled_y, x_test, y_test)
+        # first_layer_maximum_entropy_active_learning(model, train_x, train_y, unlabelled_x, unlabelled_y, x_test, y_test)
+
+    model = MnistBayesianSingleLayer()
+    print("Run active learning maximum mean variance.")
+    with tf.Session() as sess:
+        sess.run(tf.global_variables_initializer())
+        x_train, y_train, x_test, y_test = load_data()
+        unlabelled_x = x_train[100:]
+        unlabelled_y = y_train[100:]
+        train_x = x_train[:200]
+        train_y = y_train[:200]
+        model.optimize(train_x, train_y)
+        maximum_meanvar_active_learning(model, train_x, train_y, unlabelled_x, unlabelled_y, x_test, y_test)
         # first_layer_maximum_entropy_active_learning(model, train_x, train_y, unlabelled_x, unlabelled_y, x_test, y_test)

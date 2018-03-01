@@ -29,7 +29,7 @@ def random_sample_active_learning(model, train_x, train_y, unlabelled_x, unlabel
         acc = model.validate(x_test, y_test)
         print(np.array(acc).mean())
 
-    np.save('./cnn_random.npy', all_accuracy)
+    np.save('./nn_random.npy', all_accuracy)
 
 def maximum_entropy_active_learning(model, train_x, train_y, unlabelled_x, unlabelled_y, x_test, y_test, iters=10, k=100):
     all_accuracy = np.array([])
@@ -62,7 +62,7 @@ def maximum_entropy_active_learning(model, train_x, train_y, unlabelled_x, unlab
         acc_mean = np.array(acc).mean()
         print(acc_mean)
         all_accuracy = np.append(all_accuracy, acc_mean)
-        np.save('./cnn_max_entropy.npy', all_accuracy)
+        np.save('./nn_max_entropy.npy', all_accuracy)
 
 
 def maximum_meanvar_active_learning(model, train_x, train_y, unlabelled_x, unlabelled_y, x_test, y_test, iters=10, k=100):
@@ -96,7 +96,7 @@ def maximum_meanvar_active_learning(model, train_x, train_y, unlabelled_x, unlab
         print(acc_mean)
         all_accuracy = np.append(all_accuracy, acc_mean)
 
-    np.save('./cnn_max_meanvar.npy', all_accuracy)
+    np.save('./nn_max_meanvar.npy', all_accuracy)
 
 
 def first_layer_maximum_entropy_active_learning(model, train_x, train_y, unlabelled_x, unlabelled_y, x_test, y_test, iters=50, k=100):
@@ -160,7 +160,7 @@ if __name__ == "__main__":
         train_x = x_train[:200]
         train_y = y_train[:200]
         model.optimize(train_x, train_y)
-        # random_sample_active_learning(model, train_x, train_y, unlabelled_x, unlabelled_y, x_test, y_test)
+        random_sample_active_learning(model, train_x, train_y, unlabelled_x, unlabelled_y, x_test, y_test)
         # maximum_entropy_active_learning(model, train_x, train_y, unlabelled_x, unlabelled_y, x_test, y_test)
-        maximum_meanvar_active_learning(model, train_x, train_y, unlabelled_x, unlabelled_y, x_test, y_test)
+        # maximum_meanvar_active_learning(model, train_x, train_y, unlabelled_x, unlabelled_y, x_test, y_test)
         # first_layer_maximum_entropy_active_learning(model, train_x, train_y, unlabelled_x, unlabelled_y, x_test, y_test)

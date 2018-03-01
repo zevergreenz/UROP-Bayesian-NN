@@ -27,9 +27,10 @@ def random_sample_active_learning(model, train_x, train_y, unlabelled_x, unlabel
 
         # Test the accuracy of the model.
         acc = model.validate(x_test, y_test)
-        print(np.array(acc).mean())
-
-    np.save('./nn_random.npy', all_accuracy)
+        acc_mean = np.array(acc).mean()
+        print(acc_mean)
+        all_accuracy = np.append(all_accuracy, acc_mean)
+        np.save('./nn_random.npy', all_accuracy)
 
 def maximum_entropy_active_learning(model, train_x, train_y, unlabelled_x, unlabelled_y, x_test, y_test, iters=10, k=100):
     all_accuracy = np.array([])

@@ -1,12 +1,15 @@
 import numpy as np
 import tensorflow as tf
 import keras
+import random
 
-from tensorflow.examples.tutorials.mnist import input_data
 from keras import backend as K
+from keras.datasets import mnist
 from keras.models import Sequential, load_model
 from keras.layers import Dense, Flatten, Conv2D, MaxPooling2D, Activation
+from keras.utils import np_utils, generic_utils
 from layers.inference_dropout import InferenceDropout as Dropout
+from load_data import load_data
 
 class BayesianCNN(object):
 

@@ -134,13 +134,26 @@ def first_layer_maximum_entropy_active_learning(model, X_train, Y_train, X_pool,
         print(np.array(acc).mean())
 
 if __name__ == "__main__":
-    model = BayesianCNN()
-    print("Run active learning random.")
     with tf.Session() as sess:
         sess.run(tf.global_variables_initializer())
+
+        print("Run active learning random.")
+        model = BayesianCNN()
         (X_train, Y_train), (X_pool, Y_pool), (_, _), (X_test, Y_test) = load_data()
         model.optimize(X_train, Y_train)
         random_sample_active_learning(model, X_train, Y_train, X_pool, Y_pool, X_test, Y_test)
+
+        print("Run active learning maximum entropy.")
+        model = BayesianCNN()
+        (X_train, Y_train), (X_pool, Y_pool), (_, _), (X_test, Y_test) = load_data()
+        model.optimize(X_train, Y_train)
+        maximum_entropy_active_learning(model, X_train, Y_train, X_pool, Y_pool, X_test, Y_test)
+
+        print("Run active learning maximum meanvar.")
+        model = BayesianCNN()
+        (X_train, Y_train), (X_pool, Y_pool), (_, _), (X_test, Y_test) = load_data()
+        model.optimize(X_train, Y_train)
+        maximum_meanvar_active_learning(model, X_train, Y_train, X_pool, Y_pool, X_test, Y_test)
 
     # model = MnistBayesianSingleLayer()
     # print("Run active learning maximum entropy.")

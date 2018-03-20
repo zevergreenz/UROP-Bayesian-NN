@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 cnn_random = np.load('cnn_random.npy')
 cnn_max_entropy = np.load('cnn_max_entropy.npy')
 cnn_max_meanvar = np.load('cnn_max_meanvar.npy')
+cnn_max_bald = np.load('cnn_max_bald.npy')
 
 fig, ax = plt.subplots(1, 1, figsize=(12, 9))
 
@@ -18,6 +19,7 @@ training_size = range(300, 1201, 100)
 plt.plot(training_size, cnn_random, lw=1., color='#ff7f0e', label='random')
 plt.plot(training_size, cnn_max_entropy, lw=1., color='#1f77b4', label='maximum entropy')
 plt.plot(training_size, cnn_max_meanvar, lw=1., color='#aec7e8', label='maximum mean variance')
+plt.plot(training_size, cnn_max_bald, lw=1., color='#aec7e8', label='maximum bald')
 
 plt.legend(bbox_to_anchor=(0.7, 0.1), loc=2, borderaxespad=0.)
 

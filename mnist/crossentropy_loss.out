@@ -1,7 +1,0 @@
-Extracting MNIST_data/train-images-idx3-ubyte.gz
-Extracting MNIST_data/train-labels-idx1-ubyte.gz
-Extracting MNIST_data/t10k-images-idx3-ubyte.gz
-Extracting MNIST_data/t10k-labels-idx1-ubyte.gz
-Active learning iteration 0
-Total data used so far: 100
-  1/100 [  1%]                                ETA: 4523s | Loss: 4390014.500100/100 [100%] ██████████████████████████████ Elapsed: 45s | Loss: 66756.328

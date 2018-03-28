@@ -7,26 +7,30 @@ from keras import backend as K
 from keras.datasets import mnist
 from keras.utils import np_utils, generic_utils
 
-def load_data():
+def load_data(cnn=True):
     print("Loading data...")
     (X_train_all, y_train_all), (X_test, y_test) = mnist.load_data()
 
-    X_train_all = X_train_all.reshape(X_train_all.shape[0], 28, 28, 1)
-    X_test = X_test.reshape(X_test.shape[0], 28, 28, 1)
+    if cnn:
+        X_train_all = X_train_all.reshape(X_train_all.shape[0], 28, 28, 1)
+        X_test = X_test.reshape(X_test.shape[0], 28, 28, 1)
+    else:
+        X_train_all = X_train_all.reshape(X_train_all.shape[0], 784)
+        X_test = X_test.reshape(X_test.shape[0], 784)
 
     # Shuffle the training data.
     random_split = np.asarray(random.sample(range(0, X_train_all.shape[0]), X_train_all.shape[0]))
 
-    X_train_all = X_train_all[random_split, :, :, :]
+    X_train_all = X_train_all[random_split]
     y_train_all = y_train_all[random_split]
 
-    X_valid = X_train_all[10000:15000, :, :, :]
+    X_valid = X_train_all[10000:15000]
     y_valid = y_train_all[10000:15000]
 
-    X_pool = X_train_all[20000:60000, :, :, :]
+    X_pool = X_train_all[20000:60000]
     y_pool = y_train_all[20000:60000]
 
-    X_train_all = X_train_all[0:10000, :, :, :]
+    X_train_all = X_train_all[0:10000]
     y_train_all = y_train_all[0:10000]
 
     X_train = np.array([])
@@ -34,7 +38,7 @@ def load_data():
     for c in range(10):
         idx = np.array( np.where(y_train_all == c) ).T
         idx = idx[0:2, 0]
-        X = X_train_all[idx, :, :, :]
+        X = X_train_all[idx]
         y = y_train_all[idx]
         if X_train.shape[0] == 0:
             X_train = X

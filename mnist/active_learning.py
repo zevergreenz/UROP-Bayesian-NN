@@ -3,7 +3,7 @@ import tensorflow as tf
 
 from tensorflow.examples.tutorials.mnist import input_data
 from bayesian_nn import MnistBayesianMultiLayer, MnistBayesianSingleLayer
-from bayesian_cnn import BayesianCNN
+from bayesian_cnn import BayesianCNN, BayesianCNN2
 from load_data import load_data
 
 def random_sample_active_learning(model, sess, X_train, Y_train, X_pool, Y_pool, X_test, Y_test, iters=10, k=50):
@@ -21,7 +21,7 @@ def random_sample_active_learning(model, sess, X_train, Y_train, X_pool, Y_pool,
         Y_train = np.append(Y_train, np.take(Y_pool, idx, axis=0), axis=0)
 
         # Initalize new model and train the model again.
-        model = MnistBayesianSingleLayer()
+        model = BayesianCNN2()
         sess.run(tf.global_variables_initializer())
         model.optimize(X_train, Y_train)
 
@@ -35,7 +35,7 @@ def random_sample_active_learning(model, sess, X_train, Y_train, X_pool, Y_pool,
         print(acc_mean)
         all_accuracy = np.append(all_accuracy, acc_mean)
         all_data_size = np.append(all_data_size, X_train.shape[0])
-        np.save('./nn_random.npy', [all_data_size, all_accuracy])
+        np.save('./cnn_random.npy', [all_data_size, all_accuracy])
     print("Total data used: ", all_data_size)
     print("Accuracies: ", all_accuracy)
 
@@ -59,7 +59,7 @@ def maximum_entropy_active_learning(model, sess, X_train, Y_train, X_pool, Y_poo
         Y_train = np.append(Y_train, np.take(Y_pool, idx, axis=0), axis=0)
 
         # Initalize new model and train the model again.
-        model = MnistBayesianSingleLayer()
+        model = BayesianCNN2()
         sess.run(tf.global_variables_initializer())
         model.optimize(X_train, Y_train)
 
@@ -72,7 +72,7 @@ def maximum_entropy_active_learning(model, sess, X_train, Y_train, X_pool, Y_poo
         acc_mean = np.array(acc).mean()
         print(acc_mean)
         all_accuracy = np.append(all_accuracy, acc_mean)
-        np.save('./nn_max_entropy.npy', all_accuracy)
+        np.save('./cnn_max_entropy.npy', all_accuracy)
 
 
 def maximum_meanvar_active_learning(model, sess, X_train, Y_train, X_pool, Y_pool, X_test, Y_test, iters=10, k=50):
@@ -94,7 +94,7 @@ def maximum_meanvar_active_learning(model, sess, X_train, Y_train, X_pool, Y_poo
         Y_train = np.append(Y_train, np.take(Y_pool, idx, axis=0), axis=0)
 
         # Initalize new model and train the model again.
-        model = MnistBayesianSingleLayer()
+        model = BayesianCNN2()
         sess.run(tf.global_variables_initializer())
         model.optimize(X_train, Y_train)
 
@@ -108,7 +108,7 @@ def maximum_meanvar_active_learning(model, sess, X_train, Y_train, X_pool, Y_poo
         print(acc_mean)
         all_accuracy = np.append(all_accuracy, acc_mean)
 
-    np.save('./nn_max_meanvar.npy', all_accuracy)
+    np.save('./cnn_max_meanvar.npy', all_accuracy)
 
 def BALD_active_learning(model, sess, X_train, Y_train, X_pool, Y_pool, X_test, Y_test, iters=10, k=50):
     all_accuracy = np.array([])
@@ -133,7 +133,7 @@ def BALD_active_learning(model, sess, X_train, Y_train, X_pool, Y_pool, X_test, 
         Y_train = np.append(Y_train, np.take(Y_pool, idx, axis=0), axis=0)
 
         # Initalize new model and train the model again.
-        model = MnistBayesianSingleLayer()
+        model = BayesianCNN2()
         sess.run(tf.global_variables_initializer())
         model.optimize(X_train, Y_train)
 
@@ -147,7 +147,7 @@ def BALD_active_learning(model, sess, X_train, Y_train, X_pool, Y_pool, X_test, 
         print(acc_mean)
         all_accuracy = np.append(all_accuracy, acc_mean)
 
-    np.save('./nn_max_bald.npy', all_accuracy)
+    np.save('./cnn_max_bald.npy', all_accuracy)
 
 def BALD_layer_active_learning(model, sess, X_train, Y_train, X_pool, Y_pool, X_test, Y_test, iters=10, k=50):
     all_accuracy = np.array([])
@@ -172,7 +172,7 @@ def BALD_layer_active_learning(model, sess, X_train, Y_train, X_pool, Y_pool, X_
         Y_train = np.append(Y_train, np.take(Y_pool, idx, axis=0), axis=0)
 
         # Initalize new model and train the model again.
-        model = MnistBayesianSingleLayer()
+        model = BayesianCNN2()
         sess.run(tf.global_variables_initializer())
         model.optimize(X_train, Y_train)
 
@@ -186,7 +186,7 @@ def BALD_layer_active_learning(model, sess, X_train, Y_train, X_pool, Y_pool, X_
         print(acc_mean)
         all_accuracy = np.append(all_accuracy, acc_mean)
 
-    np.save('./nn_max_layer_bald.npy', all_accuracy)
+    np.save('./cnn_max_layer_bald.npy', all_accuracy)
 
 
 # def first_layer_maximum_entropy_active_learning(model, X_train, Y_train, X_pool, Y_pool, X_test, Y_test, iters=50, k=50):
@@ -239,23 +239,23 @@ if __name__ == "__main__":
     #     model.optimize(X_train, Y_train)
     #     maximum_entropy_active_learning(model, sess, X_train, Y_train, X_pool, Y_pool, X_test, Y_test)
 
-    tf.reset_default_graph()
-    with tf.Session() as sess:
-        print("Run active learning maximum meanvar.")
-        model = MnistBayesianSingleLayer()
-        sess.run(tf.global_variables_initializer())
-        (X_train, Y_train), (X_pool, Y_pool), (_, _), (X_test, Y_test) = load_data(cnn=False)
-        model.optimize(X_train, Y_train)
-        maximum_meanvar_active_learning(model, sess, X_train, Y_train, X_pool, Y_pool, X_test, Y_test)
+    # tf.reset_default_graph()
+    # with tf.Session() as sess:
+    #     print("Run active learning maximum meanvar.")
+    #     model = MnistBayesianSingleLayer()
+    #     sess.run(tf.global_variables_initializer())
+    #     (X_train, Y_train), (X_pool, Y_pool), (_, _), (X_test, Y_test) = load_data(cnn=False)
+    #     model.optimize(X_train, Y_train)
+    #     maximum_meanvar_active_learning(model, sess, X_train, Y_train, X_pool, Y_pool, X_test, Y_test)
 
-    tf.reset_default_graph()
-    with tf.Session() as sess:
-        print("Run active learning maximum bald.")
-        model = MnistBayesianSingleLayer()
-        sess.run(tf.global_variables_initializer())
-        (X_train, Y_train), (X_pool, Y_pool), (_, _), (X_test, Y_test) = load_data(cnn=False)
-        model.optimize(X_train, Y_train)
-        BALD_active_learning(model, sess, X_train, Y_train, X_pool, Y_pool, X_test, Y_test)
+    # tf.reset_default_graph()
+    # with tf.Session() as sess:
+    #     print("Run active learning maximum bald.")
+    #     model = MnistBayesianSingleLayer()
+    #     sess.run(tf.global_variables_initializer())
+    #     (X_train, Y_train), (X_pool, Y_pool), (_, _), (X_test, Y_test) = load_data(cnn=False)
+    #     model.optimize(X_train, Y_train)
+    #     BALD_active_learning(model, sess, X_train, Y_train, X_pool, Y_pool, X_test, Y_test)
 
     # tf.reset_default_graph()
     # with tf.Session() as sess:
@@ -266,26 +266,47 @@ if __name__ == "__main__":
     #     model.optimize(X_train, Y_train)
     #     BALD_layer_active_learning(model, sess, X_train, Y_train, X_pool, Y_pool, X_test, Y_test)
 
-        # print("Run active learning random.")
-        # model = BayesianCNN()
-        # (X_train, Y_train), (X_pool, Y_pool), (_, _), (X_test, Y_test) = load_data()
-        # model.optimize(X_train, Y_train)
-        # random_sample_active_learning(model, X_train, Y_train, X_pool, Y_pool, X_test, Y_test)
+    # tf.reset_default_graph()
+    # with tf.Session() as sess:
+    #     print("Run active learning random.")
+    #     model = BayesianCNN2()
+    #     sess.run(tf.global_variables_initializer())
+    #     (X_train, Y_train), (X_pool, Y_pool), (_, _), (X_test, Y_test) = load_data(cnn=True)
+    #     model.optimize(X_train, Y_train)
+    #     random_sample_active_learning(model, sess, X_train, Y_train, X_pool, Y_pool, X_test, Y_test)
 
-        # print("Run active learning maximum entropy.")
-        # model = BayesianCNN()
-        # (X_train, Y_train), (X_pool, Y_pool), (_, _), (X_test, Y_test) = load_data()
-        # model.optimize(X_train, Y_train)
-        # maximum_entropy_active_learning(model, X_train, Y_train, X_pool, Y_pool, X_test, Y_test)
+    # tf.reset_default_graph()
+    # with tf.Session() as sess:
+    #     print("Run active learning maximum entropy.")
+    #     model = BayesianCNN2()
+    #     sess.run(tf.global_variables_initializer())
+    #     (X_train, Y_train), (X_pool, Y_pool), (_, _), (X_test, Y_test) = load_data(cnn=True)
+    #     model.optimize(X_train, Y_train)
+    #     maximum_entropy_active_learning(model, sess, X_train, Y_train, X_pool, Y_pool, X_test, Y_test)
 
-        # print("Run active learning maximum meanvar.")
-        # model = BayesianCNN()
-        # (X_train, Y_train), (X_pool, Y_pool), (_, _), (X_test, Y_test) = load_data()
-        # model.optimize(X_train, Y_train)
-        # maximum_meanvar_active_learning(model, X_train, Y_train, X_pool, Y_pool, X_test, Y_test)
+    # tf.reset_default_graph()
+    # with tf.Session() as sess:
+    #     print("Run active learning maximum meanvar.")
+    #     model = BayesianCNN2()
+    #     sess.run(tf.global_variables_initializer())
+    #     (X_train, Y_train), (X_pool, Y_pool), (_, _), (X_test, Y_test) = load_data(cnn=True)
+    #     model.optimize(X_train, Y_train)
+    #     maximum_meanvar_active_learning(model, sess, X_train, Y_train, X_pool, Y_pool, X_test, Y_test)
 
-        # print("Run active learning maximum bald.")
-        # model = BayesianCNN()
-        # (X_train, Y_train), (X_pool, Y_pool), (_, _), (X_test, Y_test) = load_data()
-        # model.optimize(X_train, Y_train)
-        # BALD_active_learning(model, X_train, Y_train, X_pool, Y_pool, X_test, Y_test)
+    # tf.reset_default_graph()
+    # with tf.Session() as sess:
+    #     print("Run active learning maximum bald.")
+    #     model = BayesianCNN2()
+    #     sess.run(tf.global_variables_initializer())
+    #     (X_train, Y_train), (X_pool, Y_pool), (_, _), (X_test, Y_test) = load_data(cnn=True)
+    #     model.optimize(X_train, Y_train)
+    #     BALD_active_learning(model, sess, X_train, Y_train, X_pool, Y_pool, X_test, Y_test)
+
+    tf.reset_default_graph()
+    with tf.Session() as sess:
+        print("Run active learning maximum layer bald.")
+        model = BayesianCNN2()
+        sess.run(tf.global_variables_initializer())
+        (X_train, Y_train), (X_pool, Y_pool), (_, _), (X_test, Y_test) = load_data(cnn=True)
+        model.optimize(X_train, Y_train)
+        BALD_layer_active_learning(model, sess, X_train, Y_train, X_pool, Y_pool, X_test, Y_test)

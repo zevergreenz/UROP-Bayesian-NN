@@ -37,7 +37,7 @@ def load_data(cnn=True):
     y_train = np.array([])
     for c in range(10):
         idx = np.array( np.where(y_train_all == c) ).T
-        idx = idx[0:2, 0]
+        idx = idx[0:10, 0]
         X = X_train_all[idx]
         y = y_train_all[idx]
         if X_train.shape[0] == 0:

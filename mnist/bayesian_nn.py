@@ -51,22 +51,175 @@ class MnistBayesianSingleLayer(object):
         self.all_qw = [self.qw1, self.qw2]
         self.all_qb = [self.qb1, self.qb2]
 
-        self.inference = ed.KLqp({
-                self.w1: self.qw1,
-                self.w2: self.qw2,
-                self.b1: self.qb1,
-                self.b2: self.qb2
-            }, data={self.categorical: self.Y_placeholder})
-        self.inference.initialize(n_iter=20000, n_print=100, scale={self.categorical: 50000 / 100})
+        # Inference.
+        self.layer_inference = []
+        for i in range(self.num_layer):
+            inference_dict = {
+                self.all_w[i]: self.all_qw[i],
+                self.all_b[i]: self.all_qb[i]
+            }
+            data_dict = {
+                self.categorical: self.Y_placeholder
+            }
+            for j in range(self.num_layer):
+                if j != i:
+                    data_dict[self.all_w[j]] = self.all_qw[j]
+                    data_dict[self.all_b[j]] = self.all_qb[j]
+            inference = ed.KLqp(inference_dict, data=data_dict)
+            inference.initialize(n_iter=10000)
+            self.layer_inference.append(inference)
 
-    def optimize(self, X, Y):
+        inference_dict = {}
+        for i in range(self.num_layer):
+            inference_dict[self.all_w[i]] = self.all_qw[i]
+            inference_dict[self.all_b[i]] = self.all_qb[i]
+        data_dict = {self.categorical: self.Y_placeholder}
+        self.all_layer_inference = ed.KLqp(inference_dict, data=data_dict)
+        self.all_layer_inference.initialize(n_iter=10000)
+
+    def optimize(self, X, Y, layer=None):
         Y = np.argmax(Y, axis=1)
-        for _ in range(self.inference.n_iter):
-            info_dict = self.inference.update(feed_dict={
-                    self.X_placeholder: X,
-                    self.Y_placeholder: Y
-                })
-            self.inference.print_progress(info_dict)
+        inference = None
+        # if layer == None:
+        #     inference = self.all_layer_inference
+        # else:
+        #     inference = self.layer_inference[layer]
+        # for _ in range(1000):
+        #     info_dict = inference.update(feed_dict= {self.X_placeholder: X, self.Y_placeholder: Y})
+        #     inference.print_progress(info_dict)
+        for _ in range(1000):
+            for inference in self.layer_inference:
+                info_dict = inference.update(feed_dict= {self.X_placeholder: X, self.Y_placeholder: Y})
+                inference.print_progress(info_dict)
+        print("")
+
+    def realize_network(self, X, layer=None):
+        all_w = []
+        all_b = []
+        if layer == None:
+            for i in range(self.num_layer):
+                all_w.append(self.all_qw[i].sample())
+                all_b.append(self.all_qb[i].sample())
+        else:
+            for i in range(self.num_layer):
+                if i == layer:
+                    all_w.append(self.all_qw[i].sample())
+                    all_b.append(self.all_qb[i].sample())
+                else:
+                    all_w.append(self.all_qw[i].loc)
+                    all_b.append(self.all_qb[i].loc)
+        return tf.nn.softmax(MLP(all_w, all_b, X))
+
+    def print_model_params(self, sess):
+        # for i in range(self.num_layer):
+        #     print("qW" + str(i) + " : ", end="")
+        #     print(self.all_qw[i].loc.eval())
+        #     print("")
+        #     print("qb" + str(i) + " : ", end="")
+        #     print(self.all_qb[i].loc.eval())
+        #     print("")
+        print(self.qw1.loc.eval())
+        print(self.qw2.loc.eval())
+
+    def predict(self, X, layer=None):
+        return self.realize_network(X, layer=layer).eval()
+
+    def validate(self, X_test, Y_test, n_samples=30):
+        Y_test = np.argmax(Y_test, axis=1)
+        accuracies = []
+        for _ in range(n_samples):
+            prob = self.realize_network(X_test).eval()
+            pred = np.argmax(prob, axis=1)
+            accuracy = (pred == Y_test).mean() * 100
+            accuracies.append(accuracy)
+        return accuracies
+
+class MnistBayesianMultiLayer(object):
+    def __init__(self, input_dim=784, output_dim=10, batch_size=100):
+        self.input_dim = input_dim
+        self.output_dim = output_dim
+        self.batch_size = batch_size
+        self.num_layer = 4
+
+        self.w1_shape = [784, 800]
+        self.w2_shape = [800, 800]
+        self.w3_shape = [800, 10]
+        self.w4_shape = [10, 10]
+        self.b1_shape = [800]
+        self.b2_shape = [800]
+        self.b3_shape = [10]
+        self.b4_shape = [10]
+        self.w1 = Normal(loc=tf.zeros(self.w1_shape), scale=tf.ones(self.w1_shape))
+        self.w2 = Normal(loc=tf.zeros(self.w2_shape), scale=tf.ones(self.w2_shape))
+        self.w3 = Normal(loc=tf.zeros(self.w3_shape), scale=tf.ones(self.w3_shape))
+        self.w4 = Normal(loc=tf.zeros(self.w4_shape), scale=tf.ones(self.w4_shape))
+        self.b1 = Normal(loc=tf.zeros(self.b1_shape), scale=tf.ones(self.b1_shape))
+        self.b2 = Normal(loc=tf.zeros(self.b2_shape), scale=tf.ones(self.b2_shape))
+        self.b3 = Normal(loc=tf.zeros(self.b3_shape), scale=tf.ones(self.b3_shape))
+        self.b4 = Normal(loc=tf.zeros(self.b4_shape), scale=tf.ones(self.b4_shape))
+        self.all_w = [self.w1, self.w2, self.w3, self.w4]
+        self.all_b = [self.b1, self.b2, self.b3, self.b4]
+
+        self.X_placeholder = tf.placeholder(tf.float32, (None, input_dim))
+        self.Y_placeholder = tf.placeholder(tf.int32, (None,))
+        self.categorical = Categorical(MLP(self.all_w, self.all_b, self.X_placeholder))
+
+        self.qw1 = Normal(loc=tf.Variable(tf.random_normal(self.w1_shape), name='qw1_loc'),
+                         scale=tf.nn.softplus(tf.Variable(tf.random_normal(self.w1_shape), name='qw1_scale')))
+        self.qw2 = Normal(loc=tf.Variable(tf.random_normal(self.w2_shape), name='qw2_loc'),
+                         scale=tf.nn.softplus(tf.Variable(tf.random_normal(self.w2_shape), name='qw2_scale')))
+        self.qw3 = Normal(loc=tf.Variable(tf.random_normal(self.w3_shape), name='qw3_loc'),
+                         scale=tf.nn.softplus(tf.Variable(tf.random_normal(self.w3_shape), name='qw3_scale')))
+        self.qw4 = Normal(loc=tf.Variable(tf.random_normal(self.w4_shape), name='qw4_loc'),
+                         scale=tf.nn.softplus(tf.Variable(tf.random_normal(self.w4_shape), name='qw4_scale')))
+        self.qb1 = Normal(loc=tf.Variable(tf.random_normal(self.b1_shape), name='qb1_loc'),
+                         scale=tf.nn.softplus(tf.Variable(tf.random_normal(self.b1_shape), name='qb1_scale')))
+        self.qb2 = Normal(loc=tf.Variable(tf.random_normal(self.b2_shape), name='qb2_loc'),
+                         scale=tf.nn.softplus(tf.Variable(tf.random_normal(self.b2_shape), name='qb2_scale')))
+        self.qb3 = Normal(loc=tf.Variable(tf.random_normal(self.b3_shape), name='qb3_loc'),
+                         scale=tf.nn.softplus(tf.Variable(tf.random_normal(self.b3_shape), name='qb3_scale')))
+        self.qb4 = Normal(loc=tf.Variable(tf.random_normal(self.b4_shape), name='qb4_loc'),
+                         scale=tf.nn.softplus(tf.Variable(tf.random_normal(self.b4_shape), name='qb4_scale')))
+        self.all_qw = [self.qw1, self.qw2, self.qw3, self.qw4]
+        self.all_qb = [self.qb1, self.qb2, self.qb3, self.qb4]
+
+        # Inference.
+        self.layer_inference = []
+        for i in range(self.num_layer):
+            inference_dict = {
+                self.all_w[i]: self.all_qw[i],
+                self.all_b[i]: self.all_qb[i]
+            }
+            data_dict = {
+                self.categorical: self.Y_placeholder
+            }
+            for j in range(self.num_layer):
+                if j != i:
+                    data_dict[self.all_w[j]] = self.all_qw[j]
+                    data_dict[self.all_b[j]] = self.all_qb[j]
+            inference = ed.KLqp(inference_dict, data=data_dict)
+            inference.initialize(n_iter=10000)
+            self.layer_inference.append(inference)
+
+        inference_dict = {}
+        for i in range(self.num_layer):
+            inference_dict[self.all_w[i]] = self.all_qw[i]
+            inference_dict[self.all_b[i]] = self.all_qb[i]
+        data_dict = {self.categorical: self.Y_placeholder}
+        self.all_layer_inference = ed.KLqp(inference_dict, data=data_dict)
+        self.all_layer_inference.initialize(n_iter=10000)
+
+    def optimize(self, X, Y, layer=None):
+        Y = np.argmax(Y, axis=1)
+        inference = None
+        if layer == None:
+            inference = self.all_layer_inference
+        else:
+            inference = self.layer_inference[layer]
+        for _ in range(1000):
+            info_dict = inference.update(feed_dict= {self.X_placeholder: X, self.Y_placeholder: Y})
+            inference.print_progress(info_dict)
+        print("")
 
     def realize_network(self, X, layer=None):
         all_w = []
@@ -90,143 +243,9 @@ class MnistBayesianSingleLayer(object):
 
     def validate(self, X_test, Y_test, n_samples=30):
         Y_test = np.argmax(Y_test, axis=1)
-        probs = []
-        for _ in range(n_samples):
-            prob = self.realize_network(X_test)
-            probs.append(prob.eval())
         accuracies = []
-        for prob in probs:
-            pred = np.argmax(prob, axis=1)
-            accuracy = (pred == Y_test).mean() * 100
-            accuracies.append(accuracy)
-        return accuracies
-
-# def MLP(w1, b1, w2, b2, w3, b3, w4, b4, X):
-#     h = leaky_relu(tf.matmul(X, w1) + b1)
-#     h = leaky_relu(tf.matmul(h, w2) + b2)
-#     # h = leaky_relu(tf.matmul(h, w3) + b3)
-#     # h = tf.matmul(h, w4) + b4
-#     # h = tf.tanh(tf.matmul(h, w2) + b2)
-#     # h = tf.tanh(tf.matmul(h, w3) + b3)
-#     h = tf.matmul(h, w3) + b3
-#     return h
-
-class MnistBayesianMultiLayer(object):
-    def __init__(self, input_dim=784, output_dim=10, batch_size=100):
-        self.input_dim = input_dim
-        self.output_dim = output_dim
-        self.batch_size = batch_size
-
-        self.w1_shape = [784, 800]
-        self.w2_shape = [800, 800]
-        self.w3_shape = [800, 10]
-        self.w4_shape = [10, 10]
-        self.b1_shape = [800]
-        self.b2_shape = [800]
-        self.b3_shape = [10]
-        self.b4_shape = [10]
-
-        self.X_placeholder = tf.placeholder(tf.float32, (None, input_dim))
-        self.Y_placeholder = tf.placeholder(tf.int32, (None,))
-
-        self.w1 = Normal(loc=tf.zeros(self.w1_shape), scale=tf.ones(self.w1_shape))
-        self.w2 = Normal(loc=tf.zeros(self.w2_shape), scale=tf.ones(self.w2_shape))
-        self.w3 = Normal(loc=tf.zeros(self.w3_shape), scale=tf.ones(self.w3_shape))
-        self.w4 = Normal(loc=tf.zeros(self.w4_shape), scale=tf.ones(self.w4_shape))
-        self.b1 = Normal(loc=tf.zeros(self.b1_shape), scale=tf.ones(self.b1_shape))
-        self.b2 = Normal(loc=tf.zeros(self.b2_shape), scale=tf.ones(self.b2_shape))
-        self.b3 = Normal(loc=tf.zeros(self.b3_shape), scale=tf.ones(self.b3_shape))
-        self.b4 = Normal(loc=tf.zeros(self.b4_shape), scale=tf.ones(self.b4_shape))
-
-        # o1 = tf.nn.relu(tf.matmul(self.X_placeholder, self.w1) + self.b1)
-        # o2 = tf.nn.relu(tf.matmul(o1, self.w2) + self.b2)
-        # o3 = tf.nn.relu(tf.matmul(o2, self.w3) + self.b3)
-        # o4 = tf.nn.relu(tf.matmul(o3, self.w4) + self.b4)
-        self.categorical = Categorical(MLP(self.w1, self.b1, self.w2, self.b2, self.w3, self.b3, self.w4, self.b4, self.X_placeholder))
-
-        self.qw1 = Normal(loc=tf.Variable(tf.random_normal(self.w1_shape), name='qw1_loc'),
-                         scale=tf.nn.softplus(tf.Variable(tf.random_normal(self.w1_shape), name='qw1_scale')))
-        self.qw2 = Normal(loc=tf.Variable(tf.random_normal(self.w2_shape), name='qw2_loc'),
-                         scale=tf.nn.softplus(tf.Variable(tf.random_normal(self.w2_shape), name='qw2_scale')))
-        self.qw3 = Normal(loc=tf.Variable(tf.random_normal(self.w3_shape), name='qw3_loc'),
-                         scale=tf.nn.softplus(tf.Variable(tf.random_normal(self.w3_shape), name='qw3_scale')))
-        self.qw4 = Normal(loc=tf.Variable(tf.random_normal(self.w4_shape), name='qw4_loc'),
-                         scale=tf.nn.softplus(tf.Variable(tf.random_normal(self.w4_shape), name='qw4_scale')))
-        self.qb1 = Normal(loc=tf.Variable(tf.random_normal(self.b1_shape), name='qb1_loc'),
-                         scale=tf.nn.softplus(tf.Variable(tf.random_normal(self.b1_shape), name='qb1_scale')))
-        self.qb2 = Normal(loc=tf.Variable(tf.random_normal(self.b2_shape), name='qb2_loc'),
-                         scale=tf.nn.softplus(tf.Variable(tf.random_normal(self.b2_shape), name='qb2_scale')))
-        self.qb3 = Normal(loc=tf.Variable(tf.random_normal(self.b3_shape), name='qb3_loc'),
-                         scale=tf.nn.softplus(tf.Variable(tf.random_normal(self.b3_shape), name='qb3_scale')))
-        self.qb4 = Normal(loc=tf.Variable(tf.random_normal(self.b4_shape), name='qb4_loc'),
-                         scale=tf.nn.softplus(tf.Variable(tf.random_normal(self.b4_shape), name='qb4_scale')))
-
-        self.inference = ed.KLqp({
-                self.w1: self.qw1, 
-                self.w2: self.qw2,
-                self.w3: self.qw3,
-                self.w4: self.qw4,
-                self.b1: self.qb1,
-                self.b2: self.qb2,
-                self.b3: self.qb3,
-                self.b4: self.qb4
-            }, data={self.categorical: self.Y_placeholder})
-        self.inference.initialize(n_iter=1, n_print=100, scale={self.categorical: 55000 / self.batch_size})
-
-    # def optimize(self, mnist):
-    #     for _ in range(self.inference.n_iter):
-    #         X_batch, Y_batch = mnist.train.next_batch(self.batch_size)
-    #         Y_batch = np.argmax(Y_batch, axis=1)
-    #         info_dict = self.inference.update(feed_dict={
-    #                 self.X_placeholder: X_batch,
-    #                 self.Y_placeholder: Y_batch
-    #             })
-    #         self.inference.print_progress(info_dict)
-
-    def optimize(self, X, Y):
-        for _ in range(self.inference.n_iter):
-            info_dict = self.inference.update(feed_dict={
-                    self.X_placeholder: X,
-                    self.Y_placeholder: Y
-                })
-            self.inference.print_progress(info_dict)
-
-    def realize_network(self, X):
-        sw1 = self.qw1.sample()
-        sw2 = self.qw2.sample()
-        sw3 = self.qw3.sample()
-        sw4 = self.qw4.sample()
-        sb1 = self.qb1.sample()
-        sb2 = self.qb2.sample()
-        sb3 = self.qb3.sample()
-        sb4 = self.qb4.sample()
-        return tf.nn.softmax(MLP(sw1, sb1, sw2, sb2, sw3, sb3, sw4, sb4, X))
-
-    def predict(self, X):
-        return np.argmax(self.realize_network(X).eval(), axis=1)
-
-    # def validate(self, mnist, n_samples):
-    #     X_test = mnist.test.images
-    #     Y_test = mnist.test.labels
-    #     Y_test = np.argmax(Y_test, axis=1)
-    #     probs = []
-    #     for _ in range(n_samples):
-    #         prob = self.realize_network(X_test)
-    #         probs.append(prob.eval())
-    #     accuracies = []
-    #     for prob in probs:
-    #         pred = np.argmax(prob, axis=1)
-    #         accuracy = (pred == Y_test).mean() * 100
-    #         accuracies.append(accuracy)
-    #     return accuracies
-
-    def validate(self, X_test, Y_test, n_samples=30):
-        probs = []
         for _ in range(n_samples):
-            prob = self.realize_network(X_test)
-            probs.append(prob.eval())
-        accuracies = []
-        for prob in probs:
+            prob = self.realize_network(X_test).eval()
             pred = np.argmax(prob, axis=1)
             accuracy = (pred == Y_test).mean() * 100
             accuracies.append(accuracy)

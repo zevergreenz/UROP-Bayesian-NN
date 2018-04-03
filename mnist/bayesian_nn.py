@@ -14,6 +14,7 @@ def MLP(all_w, all_b, X):
     num_layer = len(all_w)
     h = X
     for i in range(num_layer - 1):
+        # h = tf.nn.relu(tf.matmul(h, all_w[i]) + all_b[i])
         h = leaky_relu(tf.matmul(h, all_w[i]) + all_b[i])
     h = tf.matmul(h, all_w[-1]) + all_b[-1]
     return h
@@ -80,17 +81,17 @@ class MnistBayesianSingleLayer(object):
     def optimize(self, X, Y, layer=None):
         Y = np.argmax(Y, axis=1)
         inference = None
-        # if layer == None:
-        #     inference = self.all_layer_inference
-        # else:
-        #     inference = self.layer_inference[layer]
+        if layer == None:
+            inference = self.all_layer_inference
+        else:
+            inference = self.layer_inference[layer]
+        for _ in range(2000):
+            info_dict = inference.update(feed_dict= {self.X_placeholder: X, self.Y_placeholder: Y})
+            inference.print_progress(info_dict)
         # for _ in range(1000):
-        #     info_dict = inference.update(feed_dict= {self.X_placeholder: X, self.Y_placeholder: Y})
-        #     inference.print_progress(info_dict)
-        for _ in range(1000):
-            for inference in self.layer_inference:
-                info_dict = inference.update(feed_dict= {self.X_placeholder: X, self.Y_placeholder: Y})
-                inference.print_progress(info_dict)
+        #     for inference in self.layer_inference:
+        #         info_dict = inference.update(feed_dict= {self.X_placeholder: X, self.Y_placeholder: Y})
+        #         inference.print_progress(info_dict)
         print("")
 
     def realize_network(self, X, layer=None):
@@ -239,7 +240,9 @@ class MnistBayesianMultiLayer(object):
         return tf.nn.softmax(MLP(all_w, all_b, X))
 
     def predict(self, X, layer=None):
-        return self.realize_network(X, layer=layer).eval()
+        pred = self.realize_network(X, layer=layer).eval()
+        print("Prediction: ", pred, np.sum(pred))
+        return pred
 
     def validate(self, X_test, Y_test, n_samples=30):
         Y_test = np.argmax(Y_test, axis=1)

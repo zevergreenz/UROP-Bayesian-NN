@@ -181,7 +181,6 @@ def BALD_layer_active_learning(model, sess, X_train, Y_train, X_pool, Y_pool, X_
             idx = np.argpartition(bald, -k)[-k:]
             bald_layers.append(np.sum(bald[idx]))
             bald_idxes.append(idx)
-            # print("The chosen indices are: ", idx)
             gc.collect()
 
         chosen_layer = np.argmax(bald_layers)
@@ -248,13 +247,13 @@ def BALD_layer_active_learning(model, sess, X_train, Y_train, X_pool, Y_pool, X_
 #         print(np.array(acc).mean())
 
 if __name__ == "__main__":
-    with tf.Session() as sess:
-        print("Run active learning random.")
-        model = MnistBayesianSingleLayer()
-        sess.run(tf.global_variables_initializer())
-        (X_train, Y_train), (X_pool, Y_pool), (_, _), (X_test, Y_test) = load_data(cnn=False)
-        model.optimize(X_train, Y_train)
-        random_sample_active_learning(model, sess, X_train, Y_train, X_pool, Y_pool, X_test, Y_test)
+    # with tf.Session() as sess:
+    #     print("Run active learning random.")
+    #     model = MnistBayesianSingleLayer()
+    #     sess.run(tf.global_variables_initializer())
+    #     (X_train, Y_train), (X_pool, Y_pool), (_, _), (X_test, Y_test) = load_data(cnn=False)
+    #     model.optimize(X_train, Y_train)
+    #     random_sample_active_learning(model, sess, X_train, Y_train, X_pool, Y_pool, X_test, Y_test)
 
     # tf.reset_default_graph()
     # with tf.Session() as sess:
@@ -283,16 +282,16 @@ if __name__ == "__main__":
     #     model.optimize(X_train, Y_train)
     #     BALD_active_learning(model, sess, X_train, Y_train, X_pool, Y_pool, X_test, Y_test)
 
-    # tf.reset_default_graph()
-    # with tf.Session() as sess:
-    #     print("Run active learning maximum layer bald.")
-    #     model = MnistBayesianSingleLayer()
-    #     # model = MnistBayesianMultiLayer()
-    #     sess.run(tf.global_variables_initializer())
-    #     (X_train, Y_train), (X_pool, Y_pool), (_, _), (X_test, Y_test) = load_data(cnn=False)
-    #     model.optimize(X_train, Y_train)
-    #     print("Base Model Accuracy: ", np.array(model.validate(X_test, Y_test)).mean())
-    #     BALD_layer_active_learning(model, sess, X_train, Y_train, X_pool, Y_pool, X_test, Y_test)
+    tf.reset_default_graph()
+    with tf.Session() as sess:
+        print("Run active learning maximum layer bald.")
+        model = MnistBayesianSingleLayer()
+        # model = MnistBayesianMultiLayer()
+        sess.run(tf.global_variables_initializer())
+        (X_train, Y_train), (X_pool, Y_pool), (_, _), (X_test, Y_test) = load_data(cnn=False)
+        model.optimize(X_train, Y_train)
+        print("Base Model Accuracy: ", np.array(model.validate(X_test, Y_test)).mean())
+        BALD_layer_active_learning(model, sess, X_train, Y_train, X_pool, Y_pool, X_test, Y_test)
 
     # tf.reset_default_graph()
     # with tf.Session() as sess:

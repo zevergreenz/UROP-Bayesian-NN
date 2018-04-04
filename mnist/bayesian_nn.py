@@ -76,7 +76,7 @@ class MnistBayesianSingleLayer(object):
             inference_dict[self.all_b[i]] = self.all_qb[i]
         data_dict = {self.categorical: self.Y_placeholder}
         self.all_layer_inference = ed.KLqp(inference_dict, data=data_dict)
-        self.all_layer_inference.initialize(n_iter=10000)
+        self.all_layer_inference.initialize(n_iter=50000)
 
     def optimize(self, X, Y, layer=None):
         Y = np.argmax(Y, axis=1)
@@ -85,13 +85,9 @@ class MnistBayesianSingleLayer(object):
             inference = self.all_layer_inference
         else:
             inference = self.layer_inference[layer]
-        for _ in range(2000):
+        for _ in range(1000):
             info_dict = inference.update(feed_dict= {self.X_placeholder: X, self.Y_placeholder: Y})
             inference.print_progress(info_dict)
-        # for _ in range(1000):
-        #     for inference in self.layer_inference:
-        #         info_dict = inference.update(feed_dict= {self.X_placeholder: X, self.Y_placeholder: Y})
-        #         inference.print_progress(info_dict)
         print("")
 
     def realize_network(self, X, layer=None):

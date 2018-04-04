@@ -20,13 +20,13 @@ def random_sample_active_learning(model, sess, X_train, Y_train, X_pool, Y_pool,
         print("Active learning iteration %d" % i)
         print("Total data used so far: %d" % X_train.shape[0])
         # model.print_model_params(sess)
-        pred = np.zeros(Y_pool.shape)
 
         idx = np.random.choice(len(X_pool), k, replace=False)
 
         # Add the selected data points to train set.
         X_train = np.append(X_train, np.take(X_pool, idx, axis=0), axis=0)
         Y_train = np.append(Y_train, np.take(Y_pool, idx, axis=0), axis=0)
+        gc.collect()
 
         # Initalize new model and train the model again.
         model = MnistBayesianSingleLayer()
@@ -36,6 +36,7 @@ def random_sample_active_learning(model, sess, X_train, Y_train, X_pool, Y_pool,
         # Delete the selected data points from the unlabelled set.
         X_pool = np.delete(X_pool, idx, 0)
         Y_pool = np.delete(Y_pool, idx, 0)
+        gc.collect()
 
         # Test the accuracy of the model.
         acc = model.validate(X_test, Y_test)
@@ -44,6 +45,7 @@ def random_sample_active_learning(model, sess, X_train, Y_train, X_pool, Y_pool,
         all_accuracy = np.append(all_accuracy, acc_mean)
         all_data_size = np.append(all_data_size, X_train.shape[0])
         np.save('./nn_random.npy', [all_data_size, all_accuracy])
+        gc.collect()
     print("Total data used: ", all_data_size)
     print("Accuracies: ", all_accuracy)
 
@@ -65,9 +67,10 @@ def maximum_entropy_active_learning(model, sess, X_train, Y_train, X_pool, Y_poo
         # Add the selected data points to train set.
         X_train = np.append(X_train, np.take(X_pool, idx, axis=0), axis=0)
         Y_train = np.append(Y_train, np.take(Y_pool, idx, axis=0), axis=0)
+        gc.collect()
 
         # Initalize new model and train the model again.
-        model = BayesianCNN2()
+        model = MnistBayesianSingleLayer()
         sess.run(tf.global_variables_initializer())
         model.optimize(X_train, Y_train)
 
@@ -80,7 +83,8 @@ def maximum_entropy_active_learning(model, sess, X_train, Y_train, X_pool, Y_poo
         acc_mean = np.array(acc).mean()
         print(acc_mean)
         all_accuracy = np.append(all_accuracy, acc_mean)
-        np.save('./cnn_max_entropy.npy', all_accuracy)
+        np.save('./nn_max_entropy.npy', all_accuracy)
+        gc.collect()
 
 
 def maximum_meanvar_active_learning(model, sess, X_train, Y_train, X_pool, Y_pool, X_test, Y_test, iters=10, k=50):
@@ -247,22 +251,22 @@ def BALD_layer_active_learning(model, sess, X_train, Y_train, X_pool, Y_pool, X_
 #         print(np.array(acc).mean())
 
 if __name__ == "__main__":
-    with tf.Session() as sess:
-        print("Run active learning random.")
-        model = MnistBayesianSingleLayer()
-        sess.run(tf.global_variables_initializer())
-        (X_train, Y_train), (X_pool, Y_pool), (_, _), (X_test, Y_test) = load_data(cnn=False)
-        model.optimize(X_train, Y_train)
-        random_sample_active_learning(model, sess, X_train, Y_train, X_pool, Y_pool, X_test, Y_test, iters=50, k=50)
-
-    # tf.reset_default_graph()
     # with tf.Session() as sess:
-    #     print("Run active learning maximum entropy.")
+    #     print("Run active learning random.")
     #     model = MnistBayesianSingleLayer()
     #     sess.run(tf.global_variables_initializer())
     #     (X_train, Y_train), (X_pool, Y_pool), (_, _), (X_test, Y_test) = load_data(cnn=False)
     #     model.optimize(X_train, Y_train)
-    #     maximum_entropy_active_learning(model, sess, X_train, Y_train, X_pool, Y_pool, X_test, Y_test)
+    #     random_sample_active_learning(model, sess, X_train, Y_train, X_pool, Y_pool, X_test, Y_test, iters=50, k=50)
+
+    tf.reset_default_graph()
+    with tf.Session() as sess:
+        print("Run active learning maximum entropy.")
+        model = MnistBayesianSingleLayer()
+        sess.run(tf.global_variables_initializer())
+        (X_train, Y_train), (X_pool, Y_pool), (_, _), (X_test, Y_test) = load_data(cnn=False)
+        model.optimize(X_train, Y_train)
+        maximum_entropy_active_learning(model, sess, X_train, Y_train, X_pool, Y_pool, X_test, Y_test, iters=50, k=50)
 
     # tf.reset_default_graph()
     # with tf.Session() as sess:

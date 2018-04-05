@@ -77,6 +77,7 @@ def maximum_entropy_active_learning(model, sess, X_train, Y_train, X_pool, Y_poo
         # Delete the selected data points from the unlabelled set.
         X_pool = np.delete(X_pool, idx, 0)
         Y_pool = np.delete(Y_pool, idx, 0)
+        gc.collect()
 
         # Test the accuracy of the model.
         acc = model.validate(X_test, Y_test)
